@@ -11,6 +11,9 @@ const getSentiment = async (text, model = 'gpt-3.5-turbo') => {
         model: 'gpt-3.5-turbo',
         messages: [
             {
+                role: 'system', content: 'Jesteś asystentem AI, który świetnie kwalifikuje tekst. Zawsze zwracasz wyłącznie słowo pozytywny, neutralny lub negatywny, małymi literami, bez znaków interpunkcyjnych i bez niczego więcej.',
+            },
+            {
                 role: 'user', content: `Napisz jaki jest sentyment poniższego tekstu. Odpowiedz, że jest pozytywny, neutralny lub negatywny. Oto tekst:\n\n---\n\n${text}`,
             },
         ],
@@ -21,8 +24,9 @@ const getSentiment = async (text, model = 'gpt-3.5-turbo') => {
 
 (async () => {
 
-    console.log(await getSentiment('Bardzo podoba mi się kurs mistrz.ai!'));
-    console.log(await getSentiment('Kurs mistrz.ai trwa do ok. kwietnia 2024.'));
+    const sentiment = await getSentiment('Bardzo podoba mi się kurs mistrz.ai!');
+
+    console.log(sentiment, sentiment === 'pozytywny');
 
     /**
      * Zadanie domowe:
