@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "start:dev": "tsc && node --enable-source-maps ./dist/index.js"
+  },
   "dependencies": {
     "openai": "^4.24.7"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.4"
   }
 }
