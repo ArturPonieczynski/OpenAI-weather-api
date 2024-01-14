@@ -1,0 +1,9 @@
+{
+  "name": "mistrz-ai-first-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^4.24.7"
+  }
+}
