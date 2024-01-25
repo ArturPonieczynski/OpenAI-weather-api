@@ -1,8 +1,13 @@
 import OpenAI, {} from "openai";
 import {API_KEY} from './config';
-import {ChatCompletionCreateParamsBase, ChatCompletionMessageParam} from "openai/src/resources/chat/completions";
+import {
+    ChatCompletionAssistantMessageParam,
+    ChatCompletionCreateParamsBase,
+    ChatCompletionMessageParam
+} from "openai/src/resources/chat/completions";
 import {Chat} from "openai/resources";
 import ChatCompletion = Chat.ChatCompletion;
+import {ChatCompletionRole} from "openai/resources/chat/completions";
 
 const parameters: ChatCompletionCreateParamsBase = {
     n: 1,
@@ -12,11 +17,48 @@ const parameters: ChatCompletionCreateParamsBase = {
     stream: false,
     model: 'gpt-4-1106-preview',
     messages: [],
-    response_format: {type: 'json_object'},
+    functions: [
+        {
+            name: 'answerTextAnalysis',
+            description: 'Always respond to text analysis questions using this function call.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    sentiment: {
+                        type: 'string',
+                        description: 'Sentiment of the text.',
+                        enum: ['positive', 'neutral', 'negative'],
+                    },
+                    subject: {
+                        type: 'string',
+                        description: 'Subject of the text.',
+                    },
+                    mostImportantWord: {
+                        type: 'string',
+                        description: 'Most impactful word in the text.',
+                    },
+                },
+            },
+        },
+    ],
 };
 
-const extractFirstChoiceText = (msg: OpenAI.Chat.Completions.ChatCompletion): string | null => {
-    return msg?.choices?.[0]?.message?.content ?? null;
+export type ChatResponse = null | {
+    content: null | string;
+    functionCall: null | ChatCompletionAssistantMessageParam.FunctionCall;
+};
+
+const extractFirstChoice = (msg: OpenAI.Chat.Completions.ChatCompletion): ChatResponse => {
+    const firstChoice = msg?.choices?.[0]?.message;
+
+    if (!firstChoice) {
+        return null;
+    }
+
+    return {
+        content: firstChoice.content ?? null,
+        functionCall: firstChoice.function_call ?? null,
+    };
 }
 
 export class OpenAiChat {
@@ -34,27 +76,32 @@ export class OpenAiChat {
         ];
     }
 
-    async say(prompt: string): Promise<any | null> {
+    async say(
+        prompt: string,
+        role: ChatCompletionRole = 'user',
+        functionName?: string,
+    ): Promise<ChatResponse> {
         this.messages.push({
-            role: 'user',
+            role,
             content: prompt,
-        });
+            name: functionName,
+        } as ChatCompletionMessageParam);
 
         const data = await this.openai.chat.completions.create({
             ...parameters,
             messages: this.messages,
         });
 
-        const s = extractFirstChoiceText(data as ChatCompletion);
+        const msg = extractFirstChoice(data as ChatCompletion);
 
-        if (s) {
+        if (msg.content) {
             this.messages.push({
                 role: 'assistant',
-                content: s,
+                content: msg.content,
             });
         }
 
-        return s ? JSON.parse(s) : null;
+        return msg;
     }
 
     clear() {
