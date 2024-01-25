@@ -1,20 +1,30 @@
-import {OpenAiChat} from "./open-ai-chat";
+import {WeatherService} from "./lib/weather";
 import {handleCalledFunction} from "./callable-functions";
+import {ChatResponse, OpenAiChat} from "./open-ai-chat";
+import {ChatCompletionAssistantMessageParam} from "openai/src/resources/chat/completions";
 
 (async () => {
 
-    const chat = new OpenAiChat('Jesteś świetnym klasyfikatorem tekstów, który zawsze zwraca odpowiedzi w formacie json, wywołując funkcje.');
+    const chat = new OpenAiChat('You are helpful AI assistant.');
 
-    const ans = await chat.say('Zwróć analizę tego tekstu:\n\nBardzo nie lubię takiej pogody!');
+    const firstAnswer = await chat.say('Jestem w Katowicach. Chcę wyjść właśnie na dwór. Jak się ubrać?');
 
-    console.log(ans);
+    const functionCallLoop = async (ans: ChatResponse) => {
+        console.log(ans);
 
-    if (ans.functionCall) {
-        const res = handleCalledFunction(ans.functionCall);
-        await chat.say(res, 'function', ans.functionCall.name);
+        if (ans.functionCall) {
+            const res = await handleCalledFunction(ans.functionCall);
+            const ans2 = await chat.say(res, 'function', ans.functionCall.name);
+
+            await functionCallLoop(ans2);
+        }
     }
 
-    // console.log(await chat.say('A teraz zwróć temat tego tekstu (jako `subject`).'));
-    // console.log(await chat.say('A teraz zwróć najważniejsze słowo w tym tekście(jako `mostImportantWord`).'));
+    await functionCallLoop(firstAnswer);
+
+    // const weather = new WeatherService();
+    // const geo = await weather.geocode('Katowice');
+    // const weatherInKatowice = await weather.getCurrentWeather(geo);
+    // console.log({geo, weatherInKatowice});
 
 })();

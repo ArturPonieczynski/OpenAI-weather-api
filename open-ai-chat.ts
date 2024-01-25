@@ -19,23 +19,32 @@ const parameters: ChatCompletionCreateParamsBase = {
     messages: [],
     functions: [
         {
-            name: 'answerTextAnalysis',
-            description: 'Always respond to text analysis questions using this function call.',
+            name: 'geocode',
+            description: 'Change name or zip code of the city to latitude and longitude.',
             parameters: {
                 type: 'object',
                 properties: {
-                    sentiment: {
+                    cityNameOrZipCode: {
                         type: 'string',
-                        description: 'Sentiment of the text.',
-                        enum: ['positive', 'neutral', 'negative'],
+                        description: 'City name or zip code.',
                     },
-                    subject: {
-                        type: 'string',
-                        description: 'Subject of the text.',
+                },
+            },
+        },
+
+        {
+            name: 'getWeather',
+            description: 'Get weather information based on latitude and longitude.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    latitude: {
+                        type: 'number',
+                        description: 'City latitude.',
                     },
-                    mostImportantWord: {
-                        type: 'string',
-                        description: 'Most impactful word in the text.',
+                    longitude: {
+                        type: 'number',
+                        description: 'City longitude.',
                     },
                 },
             },

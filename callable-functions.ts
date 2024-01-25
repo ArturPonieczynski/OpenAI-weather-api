@@ -1,32 +1,36 @@
 import {ChatCompletionAssistantMessageParam} from "openai/src/resources/chat/completions";
+import {LatLng, WeatherService} from "./lib/weather";
 
 enum CallableFunctions {
-    AnswerTextAnalysis = 'answerTextAnalysis',
+    Geocode = 'geocode',
+    GetWeather = 'getWeather',
 }
 
-enum Sentiment {
-    Positive = 'positive',
-    Neutral = 'neutral',
-    Negative = 'negative',
+interface GeocodeArgs {
+    cityNameOrZipCode: string;
 }
 
-interface AnswerSentimentArgs {
-    sentiment: Sentiment;
-    subject: string;
-    mostImportantWord: string;
+const getWeather = async (data: LatLng): Promise<string> => {
+    const weather = new WeatherService();
+    const currentWeather = await weather.getCurrentWeather(data);
+    return JSON.stringify(currentWeather);
 }
 
-const answerTextAnalysis = (data: AnswerSentimentArgs) => {
-    console.log('Text analysis result is', data);
-    return 'Ok.';
+const geocode = async (data: GeocodeArgs): Promise<string> => {
+    const weather = new WeatherService();
+    const geo = await weather.geocode(data.cityNameOrZipCode);
+    return JSON.stringify(geo);
 }
 
-export const handleCalledFunction = (call: ChatCompletionAssistantMessageParam.FunctionCall): string => {
+export const handleCalledFunction = async (call: ChatCompletionAssistantMessageParam.FunctionCall): Promise<string> => {
     try {
 
         switch (call.name as CallableFunctions) {
-            case CallableFunctions.AnswerTextAnalysis:
-                return answerTextAnalysis(JSON.parse(call.arguments));
+            case CallableFunctions.Geocode:
+                return await geocode(JSON.parse(call.arguments));
+
+            case CallableFunctions.GetWeather:
+                return await getWeather(JSON.parse(call.arguments));
 
             default:
                 throw new Error('Unknown function name.');
