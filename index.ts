@@ -10,15 +10,15 @@ import {ChatCompletionAssistantMessageParam} from "openai/src/resources/chat/com
     const firstAnswer = await chat.say('Jestem w Katowicach. Chcę wyjść właśnie na dwór. Jak się ubrać?');
 
     const functionCallLoop = async (ans: ChatResponse) => {
-        console.log(ans);
 
         if (ans.functionCall) {
             const res = await handleCalledFunction(ans.functionCall);
             const ans2 = await chat.say(res, 'function', ans.functionCall.name);
 
-            await functionCallLoop(ans2);
+            return await functionCallLoop(ans2);
         }
-    }
+        console.log(ans);
+    };
 
     await functionCallLoop(firstAnswer);
 
